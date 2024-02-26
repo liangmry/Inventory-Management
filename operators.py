@@ -1,19 +1,30 @@
 import mysql.connector
 
-# 建立数据库连接
-conn = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='123456',
-    database='test'
-)
-# 获取游标对象
-cursor = conn.cursor()
+conn = None
+cursor = None
 
 # 产品表
 table1 = 'products'
 # 库存表
 table2 = 'inventory'
+
+def connect():
+    global conn, cursor
+    # 建立数据库连接
+    conn = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='123456',
+        database='test'
+    )
+    # 获取游标对象
+    cursor = conn.cursor()
+
+def close():
+    global cursor, conn
+    # 关闭连接
+    cursor.close()
+    conn.close()
 
 # 产品类
 class Product:
@@ -25,6 +36,7 @@ class Product:
 
     # 添加产品
     def add_product(self):
+        global conn, connect
         sql = f'insert into {table1} values(%s, %s, %s, %s)'
         cursor.execute(sql, (self.product_id, self.name, self.description, self.price))
         # 提交更改
@@ -101,12 +113,12 @@ class Inventory:
         else:
             print('该产品不在仓库')
 
-p1 = Product('123', 'apple', 'AA', 12.3)
-p1.add_product()
-inventory = Inventory()
-inventory.add_product(p1, '12345', 10)
-inventory.remove_product('12345', 5)
+def main():
+    connect()
+    global conn, cursor
+    p1 = Product('123', 'apple', 'asd', 12)
+    p1.add_product()
+    close()
 
-# 关闭连接
-cursor.close()
-conn.close()
+if __name__ == '__main__':
+    main()
