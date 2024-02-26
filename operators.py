@@ -12,6 +12,8 @@ cursor = conn.cursor()
 
 # 产品表
 table1 = 'products'
+# 库存表
+table2 = 'inventory'
 
 # 产品类
 class Product:
@@ -67,11 +69,43 @@ class Product:
         print(f'{self.product_id}：{result_name}的价格是{result_price}，它的基础信息是{result_desc}')
 
 
-p1 = Product('123', 'apple', 'ashda', 12.3)
+# 库存类
+class Inventory:
+    # 创建仓库
+    def __init__(self):
+        self.my_inventory = {}
+
+    # 产品入库，包括产品自身，入库号码，数量
+    def add_product(self, product, inventory_id, quantity):
+        self.my_inventory[inventory_id] = {'product': product, 'quantity': quantity}
+        # 加入表中
+        sql = f'insert into {table2} values({inventory_id}, {product.product_id}, {quantity})'
+        cursor.execute(sql)
+        conn.commit()
+
+    # 产品出库
+    def remove_product(self, inventory_id, quantity):
+        # 产品是否入库
+        if inventory_id in self.my_inventory:
+            # 数量是否足够
+            current_quantity = self.my_inventory[inventory_id]['quantity']
+            if current_quantity >= quantity:
+                sql = f'update {table2} set quantity = {current_quantity}-{quantity} where inventory_id = {inventory_id}'
+                cursor.execute(sql)
+                conn.commit()
+
+                self.my_inventory[inventory_id]['quantity'] -= quantity
+                print('出库成功')
+            else:
+                print('库存不足，出库失败')
+        else:
+            print('该产品不在仓库')
+
+p1 = Product('123', 'apple', 'AA', 12.3)
 p1.add_product()
-p1.show_product_info()
-p1.modify_price_fromID(15.5)
-p1.show_product_info()
+inventory = Inventory()
+inventory.add_product(p1, '12345', 10)
+inventory.remove_product('12345', 5)
 
 # 关闭连接
 cursor.close()
